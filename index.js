@@ -14,16 +14,26 @@
   'use strict';
 
   // Your code here...
-  console.log('hi~ 1')
+  console.log('hi~ 2')
   try {
     console.log('hi~ Jquery', $)
   } catch (e) {
     console.log('e', e.toString())
   }
-  // toggle status
-  let status = false
 
   const getDom = (ele) =>  document.querySelector(ele)
+  const debounce = (func, wait) => {
+    let timeout
+    return () => {
+      let context = this
+      let args = arguments
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        timeout = null
+        func.apply(context, args)
+      }, wait)
+    }
+  }
   // init
   const init = () => {
     let style = document.createElement('style')
@@ -77,7 +87,7 @@
         display: none;
       }
       .github-none {
-        display: none;
+        display: none !important;
       }
 
       .github-toggle {
@@ -92,46 +102,47 @@
     toggleBtn.classList.add('btn-primary')
     toggleBtn.classList.add('github-toggle')
 
+    toggleBtn.setAttribute('type', 'button')
+
     let container = getDom('.js-slash-command-surface .flex-items-center.flex-justify-end')
     let containerBtn = getDom('.js-slash-command-surface .flex-items-center.flex-justify-end .btn')
     container.insertBefore(toggleBtn, containerBtn)
 
-    toggleBtn.addEventListener('click', () => {
-      console.log('status', status)
-      status = !status
-      if (status) {
-        toggle()
-      }
+    toggleBtn.addEventListener('click', e => {
+      e.stopPropagation()
+      toggle()
     }, false)
   }
 
-  const toggle = () => {
-    const render = () => {
-      getDom('.js-previewable-comment-form button.tabnav-tab.js-preview-tab').click()
-      getDom('.js-previewable-comment-form button.tabnav-tab.js-write-tab').click()
-    }
+  const render = () => {
+    getDom('.js-previewable-comment-form button.tabnav-tab.js-preview-tab').click()
+    getDom('.js-previewable-comment-form button.tabnav-tab.js-write-tab').click()
+  }
 
-    // remove element
-    getDom('.timeline-comment-avatar').remove()
+  let issueBody = getDom('#issue_body')
+  let renderEvent = debounce(() => {
+    console.log(11111)
+    render()
+  }, 500)
+  issueBody.addEventListener('input', renderEvent, false)
+
+  const toggle = () => {
+    // avatar
+    getDom('.timeline-comment-avatar').classList.toggle('github-none')
 
     // set style
-    getDom('.js-preview-panel').classList.add('github-issue-preview-panel')
+    getDom('.js-preview-panel').classList.toggle('github-issue-preview-panel')
     // getDom('.js-upload-markdown-image.is-default').classList.add('github-issue-markdown-panel')
-    getDom('.timeline-comment-wrapper.composer.composer-responsive').classList.add('github-issue-panel')
+    getDom('.timeline-comment-wrapper.composer.composer-responsive').classList.toggle('github-issue-panel')
 
-    getDom('.tabnav-tabs').classList.add('github-tabnav')
-    getDom('.footer.p-responsive').classList.add('github-none')
-    getDom('.gutter-condensed .flex-shrink-0.col-12.col-md-3 .position-relative').classList.add('github-none')
-
-    let issueBody = getDom('#issue_body')
-    issueBody.addEventListener('input', () => {
-      render()
-    }, false)
+    getDom('.tabnav-tabs').classList.toggle('github-tabnav')
+    getDom('.footer.p-responsive').classList.toggle('github-none')
+    getDom('.gutter-condensed .flex-shrink-0.col-12.col-md-3 .position-relative').classList.toggle('github-none')
+    getDom('.Header').classList.toggle('github-none')
+    getDom('#js-repo-pjax-container .color-bg-secondary').classList.toggle('github-none')
   }
 
   init()
-  if (status) {
-    toggle()
-  }
+  toggle()
 
 })()
